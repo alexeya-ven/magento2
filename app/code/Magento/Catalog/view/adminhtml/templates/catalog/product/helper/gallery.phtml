@@ -55,6 +55,13 @@ $formName = $block->getFormName();
                class="image-<?= $block->escapeHtml($typeData['code']) ?>"
                type="hidden"
                value="<?= $block->escapeHtml($typeData['value']) ?>"/>
+
+        <?php if ($block->hasUseDefault()) :?>
+            <input type="hidden" name="use_default[<?= $block->escapeHtmlAttr($typeData['code']) ?>]"
+                   data-form-part="<?= $block->escapeHtmlAttr($formName) ?>"
+                   value="<?= $element->usedDefaultGallery() ? '1' : '0' ?>" class="ven-product-gallery-use-default"
+            />
+        <?php endif; ?>
     <?php
 
 } ?>

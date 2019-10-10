@@ -8,6 +8,7 @@ namespace Magento\Catalog\Model\Product\Gallery;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\EntityManager\Operation\ExtensionInterface;
 use Magento\MediaStorage\Model\File\Uploader as FileUploader;
+use Magento\Store\Model\Store;
 
 /**
  * Create handler for catalog product gallery
@@ -161,26 +162,33 @@ class CreateHandler implements ExtensionInterface
             $value['duplicate'] = $duplicate;
         }
 
-        /* @var $mediaAttribute \Magento\Catalog\Api\Data\ProductAttributeInterface */
-        foreach ($this->getMediaAttributeCodes() as $mediaAttrCode) {
-            $attrData = $product->getData($mediaAttrCode);
-            if (empty($attrData) && empty($clearImages) && empty($newImages) && empty($existImages)) {
-                continue;
-            }
-            $this->processMediaAttribute(
-                $product,
-                $mediaAttrCode,
-                $clearImages,
-                $newImages
-            );
-            if (in_array($mediaAttrCode, ['image', 'small_image', 'thumbnail'])) {
-                $this->processMediaAttributeLabel(
+
+        //Added by VEN team to prevent saving media attributes in database
+        // on store scope when "Use default values" used
+        if((bool)$product->getData('use_default_media_gallery') === false
+            || (int)$product->getStoreId() === Store::DEFAULT_STORE_ID
+        ) {
+            /* @var $mediaAttribute \Magento\Catalog\Api\Data\ProductAttributeInterface */
+            foreach ($this->getMediaAttributeCodes() as $mediaAttrCode) {
+                $attrData = $product->getData($mediaAttrCode);
+                if (empty($attrData) && empty($clearImages) && empty($newImages) && empty($existImages)) {
+                    continue;
+                }
+                $this->processMediaAttribute(
                     $product,
                     $mediaAttrCode,
                     $clearImages,
-                    $newImages,
-                    $existImages
+                    $newImages
                 );
+                if (in_array($mediaAttrCode, ['image', 'small_image', 'thumbnail'])) {
+                    $this->processMediaAttributeLabel(
+                        $product,
+                        $mediaAttrCode,
+                        $clearImages,
+                        $newImages,
+                        $existImages
+                    );
+                }
             }
         }
 
